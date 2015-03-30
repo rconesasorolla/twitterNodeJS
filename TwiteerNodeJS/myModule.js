@@ -7,7 +7,8 @@ myDB = function(dataDir){
         this.dataDir=dataDir+"/";
         this.datasets=[];
         this.lastID=0;
-        this.inspectDatasets()
+        this.inspectDatasets();
+        this.polarityDic = {};
 }
 
 myDB.prototype.inspectDatasets = function(){
@@ -141,21 +142,19 @@ myDB.prototype.countNumberOfWords = function(name,callback){
                 }
             }
             result= JSON.stringify(dic);
-            callback({result: result});
-            return{result: result};
+            callback({result:dic});
         });
+
 }
 
 
-myDB.prototype.wordPolarity = function(name, callback){
+myDB.prototype.wordPolarity = function(){
     var readStream = fs.createReadStream("../polaridades.txt");
-    var count = 0;
+    var dic = this.polarityDic;
     readStream.pipe(split())
         .on('data', function(line){
             var data =line.split("	");
-            if(data[0]===name){
-                return data[0];
-            }
+            dic[data[0]] = data[1];
         })
         .on('end', function(){
 
@@ -163,12 +162,26 @@ myDB.prototype.wordPolarity = function(name, callback){
 }
 
 myDB.prototype.streamPolarity = function(name,callback){
-    var count = 0;
-    var data = this.countNumberOfWords(name,callback);
-    for(index in data){
-        count += data[data[index]]*this.wordPolarity(data[index]);
-    }
-    callback({result:count});
+    var positive = 0;
+    var negative = 0;
+    var neutral  = 0;
+    var DB = this;
+    this.countNumberOfWords(name,function(data){
+        for(index in data.result){
+            if(DB.polarityDic[index]==="-1"){
+                console.log("neg "+index);
+                negative += data.result[index];
+            }else if(DB.wordPolarity(index)==="1"){
+                console.log("pos "+index);
+                positive += data.result[index];
+            }else{
+                console.log("neu "+index);
+                neutral += data.result[index];
+            }
+        }
+        callback({positive:positive,neutral:neutral,negative:negative});
+    });
+
 }
 exports.myDB = myDB
 

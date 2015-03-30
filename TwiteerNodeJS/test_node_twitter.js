@@ -1,6 +1,6 @@
 db = require("./myModule");
 var DB = new myDB("./data");
-
+DB.wordPolarity();
 
 var util = require('util'),
 
@@ -56,16 +56,16 @@ function wordPolarity(name, DB){
 
 function streamPolarity(name, DB){
     DB.streamPolarity(name,function(data){
-        console.log("Polaridad: "+data["result"]);
+        console.log("Polaridad positiva:"+ data.positive + " Polaridad neutral:" + data.neutral+ " Polaridad negativa:" + data.negative);
     })
 }
 
 
 //saveTweets('patata',DB);
-//countNumberOfWords('camiones',DB);
+//countNumberOfWords('coches',DB);
 //countWords('coches',DB);
 //wordPolarity('volcar',DB);
-streamPolarity('patata', DB);
+streamPolarity('coches', DB);
 
 
 
