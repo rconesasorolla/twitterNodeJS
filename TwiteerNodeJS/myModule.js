@@ -9,6 +9,7 @@ myDB = function(dataDir){
         this.lastID=0;
         this.inspectDatasets();
         this.polarityDic = {};
+        this.numberLinesDic = {};
 }
 
 myDB.prototype.inspectDatasets = function(){
@@ -21,8 +22,22 @@ myDB.prototype.inspectDatasets = function(){
 }
 
 myDB.prototype.getDatasets = function(){
-      return this.datasets
+    return this.datasets
 }
+
+myDB.prototype.getNumberOfLines = function(name,callback){
+    var readStream = fs.createReadStream("./data/"+name+".json");
+    var numberOfLines = 0;
+    readStream.pipe(split())
+        .on('data', function(){
+            numberOfLines++;
+        })
+        .on('end',function(){
+            numberOfLines--;
+            callback({value:numberOfLines,key:name});
+        })
+}
+
 
 myDB.prototype.filename = function(name){
 	   return this.dataDir+name+".json";
@@ -50,8 +65,6 @@ myDB.prototype.insertObject = function(name,data){
       }
 
       data.timestamp=this.getTimeStamp();
-      data.id=this.lastID;
-      this.lastID=data.id+1;
       fs.appendFile(this.filename(name),JSON.stringify(data)+"\n");
 
       return true;
@@ -85,17 +98,16 @@ myDB.prototype.deleteDataset= function(name){
 
 }
 
-myDB.prototype.getDatasetInfo = function(name){
+myDB.prototype.getDatasetInfo = function(name,callback){
     var data = "";
     var index = this.datasets.indexOf(name);
-    if(index != 1){
-        xs = fs(this.file(name));
-        xs.slice(1)
-            .on('data',function(chunk) {
-                data = chunk.toString().trim();
+    if(index != 1) {
+        xs = sf(this.filename(name));
+        xs.slice(0,1)
+            .on('data', function (chunk) {
+                callback({result:JSON.parse(chunk.toString().trim())});
             });
     }
-    return "result:"+data;
 }
 
 myDB.prototype.searchDataset = function(keyword){
@@ -169,13 +181,10 @@ myDB.prototype.streamPolarity = function(name,callback){
     this.countNumberOfWords(name,function(data){
         for(index in data.result){
             if(DB.polarityDic[index]==="-1"){
-                console.log("neg "+index);
                 negative += data.result[index];
             }else if(DB.wordPolarity(index)==="1"){
-                console.log("pos "+index);
                 positive += data.result[index];
             }else{
-                console.log("neu "+index);
                 neutral += data.result[index];
             }
         }
