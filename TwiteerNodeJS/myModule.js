@@ -10,6 +10,7 @@ myDB = function(dataDir){
         this.inspectDatasets();
         this.polarityDic = {};
         this.numberLinesDic = {};
+        this.wordsDic = {};
 }
 
 myDB.prototype.inspectDatasets = function(){
@@ -36,6 +37,18 @@ myDB.prototype.getNumberOfLines = function(name,callback){
             numberOfLines--;
             callback({value:numberOfLines,key:name});
         })
+}
+
+
+
+myDB.prototype.getStreamsCount= function() {
+    var streams = this.getDatasets();
+    var dic = this.numberLinesDic;
+    for (stream in streams) {
+        this.getNumberOfLines(streams[stream],function(data){
+            dic[data.key]=data.value;
+        });
+    }
 }
 
 
@@ -88,6 +101,19 @@ myDB.prototype.getLastObjects= function(name,n,callback){
       else{callback({error:'no valid dataset '+name});}
 }
 
+myDB.prototype.orderDictionary = function(n) {
+    var dict = this.wordsDic;
+    var items = Object.keys(dict).map(function (key) {
+        return [key, dict[key]];
+    });
+
+    items.sort(function (first, second) {
+        return second[1] - first[1];
+    });
+
+    console.log(items.slice(0,n));
+}
+
 myDB.prototype.deleteDataset= function(name){
     if (this.datasets.indexOf(name) !=-1 ){
         fs.unlinkSync(this.filename(name));
@@ -136,7 +162,7 @@ myDB.prototype.countWords = function(name, callback){
 
 myDB.prototype.countNumberOfWords = function(name,callback){
     var readStream = fs.createReadStream("./data/"+name+".json");
-    var dic = {};
+    var dic = this.wordsDic;
     var result;
     var wordsJSON;
     readStream.pipe(split())
@@ -154,6 +180,7 @@ myDB.prototype.countNumberOfWords = function(name,callback){
                 }
             }
             result= JSON.stringify(dic);
+            console.log(dic);
             callback({result:dic});
         });
 
@@ -190,6 +217,21 @@ myDB.prototype.streamPolarity = function(name,callback){
         }
         callback({positive:positive,neutral:neutral,negative:negative});
     });
+
+}
+
+
+myDB.prototype.getTweetsWithGeo = function(name,callback){
+    var dic = {};
+    var readStream = fs.createReadStream("./data/"+name+".json");
+    readStream.pipe(split())
+        .on('data', function(line){
+            var parsedData = JSON.parse(line);
+            dic[parsedData.id] = parsedData.coordinates;
+        })
+        .on('end', function(){
+            callback({result:dic});
+        });
 
 }
 exports.myDB = myDB

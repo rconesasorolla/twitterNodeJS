@@ -83,29 +83,35 @@ function countNumberOfWords(query,DB){
     })
 }
 
-function addValueDic(key,value){
-    linesDic[key] = value;
+function getLastTweets(query,number,DB){
+    DB.getLastObjects(query,number,function(data){
+        console.log(data.result);
+    });
 }
-function final(callback){
-    console.log(linesDic);
+//DB.countNumberOfWords('camiones',function(data){
+
+//});
+//setTimeout(function() {
+//    DB.orderDictionary(2);
+//}, 3000);
+
+function getTweetsGeo(query,DB){
+    DB.getTweetsWithGeo(query,function(data){
+       console.log(data.result);
+    });
 }
 
-function getStreamsCount(callback) {
-    var streams = DB.getDatasets();
-    for (stream in streams) {
-        DB.getNumberOfLines(streams[stream],function(data){
-            addValueDic(data.key,data.value);
-            console.log(stream);
-            if (stream == streams.length-1){
-                final(callback);
-            }
-        });
-    }
-}
+getTweetsGeo("patata",DB);
 
-getStreamsCount();
+
+//DB.getStreamsCount();
+//setTimeout(function() {
+    //console.log(DB.numberLinesDic);
+//}, 3000);
+
+//getLastTweets("patata",4,DB);
+
 //createDataset('patata',DB);
-//countNumberOfWords('patata',DB);
 //saveTweets('patata',DB);
 //countNumberOfWords('coches',DB);
 //countWords('coches',DB);

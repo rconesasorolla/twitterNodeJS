@@ -15,11 +15,11 @@ var DB=new myDB('./data');
 
 
 app.get('/',function(req,res){
-    res.sendFile("public/blogs.html",{root:application_root});
+    res.sendFile("public/myMashup.html",{root:application_root});
 });
 
 app.get('/index.html',function(req,res){
-    res.sendFile("public/blogs.html",{root:application_root});
+    res.sendFile("public/myMashup.html",{root:application_root});
 });
 
 app.get('/public/:fname',function(req,res){
