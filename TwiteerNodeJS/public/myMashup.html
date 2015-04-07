@@ -21,10 +21,12 @@ button {
     padding: 4px;
     margin: 3px;
     width: 100px;
+    height: 50px;
 }
 
 button#new{
 	width: 50px;
+    height: 40px;
 	background-color: white;
 }
 
@@ -34,8 +36,8 @@ table{
 }
 
 div#streamlist{
-    width:910px;
-    height:30px;
+    width:1210px;
+    height:80px;
     background-color:purple;
 }
 
@@ -62,9 +64,15 @@ div#mapcanvas{
     height:300px;
     background-color:lightgrey;
 }
+
+canvas#lastTweet{
+    width:300px;
+    height:300px;
+    background-color:lightgrey;
+}
 	
 div#fotos{
-	width:910px;
+	width:1210px;
     height:150px;
     text-align:center;
     background-color:purple;
@@ -79,16 +87,34 @@ div#fotos{
 
 <script>
 	$(document).ready(function(){
-
+	   var streamNames = [];
+	   var streamCount = [];
 		//initial list of buttons (streams)
-	   var lbuttons=["felicidad","euforia"];
-	      
+	   $.getJSON( "http://localhost:8000/stream", {
+		
+		}).done(function(data){
+				var json = JSON.stringify(data);
+				
+				$.each(data.result, function(name, count) {
+					streamNames.push(name);
+					streamCount.push(count);	
+				});
+		});
+		
+
+
 	   //button for cretaing new streams
 	   $("#streamlist").append("<button id='NEW' width='1%'><b>+</b></button>");
+	   	
+	   setTimeout(function() {
+
+	   		$.each(streamNames,function(indx,data){
+	   			setTimeout(function() {
+	   				addButton(data,streamCount[indx]);
+			   }, 50);
+			});
 	   
-	   $.each(lbuttons,function(indx,data){
-	   		addButton(data);
-	   });
+	   }, 50);
 
 	   //event for button stream class
 	   $(".stream").click(function(){
@@ -107,28 +133,48 @@ div#fotos{
 			//hide the form
 			$("#form-container").css({"visibility":"hidden"});
 			newdata=$("#name").val();
+			// $.post("http://localhost:8000/stream",{"data":newdata},function(data) {
+			// 	window.alert(data);		
+			// });
+		
 			//create new button for new stream
-			addButton(newdata);
+			addButton(newdata,0);
 	   });
 	});
 
-	function addButton(data){
+	function addButton(data,number){
 		if (data.length>0){
-				newbutton="<button class='stream' id="+data+">"+data+"</button>";
+				newbutton="<button class='stream' id="+data+">"+data+"<br>"+number+"</button>";
 				$(newbutton).insertBefore($("#NEW")).click(function(){actionButton(this);});
 			};
 	};
 	 
 	function actionButton(data){
 		streamname=data.getAttribute("id");
-		lwords=[["hola",50],["mundo",15]];
-		lwords.push([streamname,70]); //include the ID of the stream as main word
+		var url = "http://localhost:8000/stream/"+streamname+"/words";
+		$.getJSON(url, {
+		}).done(function(data){
+			lwords = data.result;
+		});
 	    
-		update_cloud(lwords);
-		
-		positive=Math.random();
-		polarity={"positive":positive,"negative":1-positive};
-		update_polar(polarity);
+		setTimeout(function() {
+	   		update_cloud(lwords);
+	   
+	   }, 2000);
+
+
+		var url2 = "http://localhost:8000/stream/"+streamname+"/polarity";
+		$.getJSON(url2, {
+		}).done(function(data){
+			var json = data.result;
+			polarity = {"positive":json.positive/1,"negative":json.negative/1};
+			window.alert(polarity.negative);
+		});
+	    
+		setTimeout(function() {
+			update_polar(polarity);	   
+	   }, 5000);
+
 		
 		marklabel=streamname+":tweet1";
 		geoPos={marklabel:[40.0-Math.random(),-0.624207+Math.random()/10.]};
@@ -215,24 +261,28 @@ div#fotos{
 	<button id="create" width="10%">Create</button>
 </div>
 
-<table cols="3">
+<table cols="4">
 <tr>
-	<td colspan="3"> 
+	<td colspan="4"> 
 		<div id="streamlist"></div>
 	</td>
 </tr>
  <tr>
-     <td>
-         <canvas id="wordcloud"></canvas> </td>
+    <td>
+        <canvas id="wordcloud"></canvas> 
+    </td>
     <td>
 		 <canvas id="polarity"></canvas>
-
+    </td>
+    <td>
+		 <canvas id="lastTweet"></canvas>
     </td>
 	<td>
 		<div id="mapcanvas"></div>
+	</td>	
  </tr>
  <tr>
-	<td colspan="3">
+	<td colspan="4">
 		<div id="fotos"></div>
 	</td>
 </tr>

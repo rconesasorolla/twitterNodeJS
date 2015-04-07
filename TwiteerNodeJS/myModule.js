@@ -101,8 +101,9 @@ myDB.prototype.getLastObjects= function(name,n,callback){
       else{callback({error:'no valid dataset '+name});}
 }
 
-myDB.prototype.orderDictionary = function(n) {
-    var dict = this.wordsDic;
+myDB.prototype.orderDictionary = function(name,n,callback) {
+
+    var dict = this.wordsDic[name];
     var items = Object.keys(dict).map(function (key) {
         return [key, dict[key]];
     });
@@ -111,7 +112,19 @@ myDB.prototype.orderDictionary = function(n) {
         return second[1] - first[1];
     });
 
-    console.log(items.slice(0,n));
+    callback({result:items.slice(0,n)});
+
+}
+
+myDB.prototype.getDictionaryWordsDatasets = function(){
+    var dic = this.wordsDic;
+    var datasets = this.datasets;
+    for(i in this.datasets){
+        caca=datasets[i];
+        this.countNumberOfWords(datasets[i],function(data){
+            dic[data.name]=data.result;
+        });
+    }
 }
 
 myDB.prototype.deleteDataset= function(name){
@@ -146,7 +159,7 @@ myDB.prototype.searchDataset = function(keyword){
     return "result:"+result;
 }
 
-myDB.prototype.countWords = function(name, callback){
+/*myDB.prototype.countWords = function(name, callback){
     var readStream = fs.createReadStream("./data/"+name+".json");
     var words = "";
     readStream.pipe(split())
@@ -158,19 +171,24 @@ myDB.prototype.countWords = function(name, callback){
        count = words.split(" ").length-2;
        callback({result: count});
     });
-}
+}*/
 
 myDB.prototype.countNumberOfWords = function(name,callback){
     var readStream = fs.createReadStream("./data/"+name+".json");
-    var dic = this.wordsDic;
+    var dic = {};
     var result;
-    var wordsJSON;
+    var wordsJSON="";
+
+
     readStream.pipe(split())
         .on('data', function(line){
             var data = JSON.parse(line);
-            wordsJSON +=data.body + " ";
+            if(data.type != "metadata"){
+                wordsJSON +=data.text + " ";
+            }
         })
         .on('end', function(){
+            wordsJSON=wordsJSON.trim();
             var words = wordsJSON.split(" ");
             for (word in words){
                 if(dic[words[word]] > 0){
@@ -180,8 +198,7 @@ myDB.prototype.countNumberOfWords = function(name,callback){
                 }
             }
             result= JSON.stringify(dic);
-            console.log(dic);
-            callback({result:dic});
+            callback({result:dic,name:name});
         });
 
 }
@@ -215,7 +232,8 @@ myDB.prototype.streamPolarity = function(name,callback){
                 neutral += data.result[index];
             }
         }
-        callback({positive:positive,neutral:neutral,negative:negative});
+        var total = positive+negative+neutral;
+        callback({result:{positive:positive/total,negative:negative/total,neutral:neutral/total}});
     });
 
 }

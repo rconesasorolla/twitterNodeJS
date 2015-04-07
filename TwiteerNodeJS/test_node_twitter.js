@@ -58,13 +58,6 @@ function saveTweets(query,DB){
 }
 
 
-function countWords(name, DB) {
-    DB.countWords(name, function (data) {
-        console.log("Numero de palabras: " + data["result"]);
-    });
-
-}
-
 function wordPolarity(name, DB){
     DB.wordPolarity(name, function (data){
         console.log("Polaridad: "+data);
@@ -76,24 +69,29 @@ function streamPolarity(name, DB){
         console.log("Polaridad positiva:"+ data.positive + " Polaridad neutral:" + data.neutral+ " Polaridad negativa:" + data.negative);
     })
 }
+DB.getDictionaryWordsDatasets();
 
-function countNumberOfWords(query,DB){
-    DB.getNumberOfLines(query,function(data){
+setTimeout(function() {
+    DB.orderDictionary("patata",20,function(data){
         console.log(data.result);
-    })
-}
+    });
+},  1000);
+
+
+
 
 function getLastTweets(query,number,DB){
     DB.getLastObjects(query,number,function(data){
         console.log(data.result);
     });
 }
-//DB.countNumberOfWords('camiones',function(data){
 
-//});
-//setTimeout(function() {
-//    DB.orderDictionary(2);
-//}, 3000);
+DB.getStreamsCount(function(data){
+    console.log(data);
+});
+
+
+
 
 function getTweetsGeo(query,DB){
     DB.getTweetsWithGeo(query,function(data){
@@ -101,7 +99,7 @@ function getTweetsGeo(query,DB){
     });
 }
 
-getTweetsGeo("patata",DB);
+//getTweetsGeo("patata",DB);
 
 
 //DB.getStreamsCount();
@@ -113,8 +111,6 @@ getTweetsGeo("patata",DB);
 
 //createDataset('patata',DB);
 //saveTweets('patata',DB);
-//countNumberOfWords('coches',DB);
-//countWords('coches',DB);
 //wordPolarity('volcar',DB);
 //streamPolarity('coches', DB);
 
