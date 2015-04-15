@@ -73,29 +73,23 @@ DB.getDictionaryWordsDatasets();
 
 setTimeout(function() {
     DB.orderDictionary("patata",20,function(data){
-        console.log(data.result);
+       // console.log(data.result);
     });
 },  1000);
 
 
 
-
-function getLastTweets(query,number,DB){
-    DB.getLastObjects(query,number,function(data){
-        console.log(data.result);
-    });
-}
-
+/*
 DB.getStreamsCount(function(data){
     console.log(data);
 });
-
+*/
 
 
 
 function getTweetsGeo(query,DB){
     DB.getTweetsWithGeo(query,function(data){
-       console.log(data.result);
+      // console.log(data.result);
     });
 }
 
@@ -107,7 +101,7 @@ function getTweetsGeo(query,DB){
     //console.log(DB.numberLinesDic);
 //}, 3000);
 
-//getLastTweets("patata",4,DB);
+//DB.getLastTweets("patata");
 
 //createDataset('patata',DB);
 //saveTweets('patata',DB);

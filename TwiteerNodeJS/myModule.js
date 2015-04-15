@@ -72,13 +72,18 @@ myDB.prototype.createDataset = function(name,data){
       else { return false; }
 }
 
-myDB.prototype.insertObject = function(name,data){
+myDB.prototype.insertObject = function(last,name,data){
       if (this.datasets.indexOf(name) === -1 ){
         return false;
       }
 
       data.timestamp=this.getTimeStamp();
-      fs.appendFile(this.filename(name),JSON.stringify(data)+"\n");
+      if (last){
+          fs.appendFile(this.filename(name),JSON.stringify(data));
+
+      } else{
+          fs.appendFile(this.filename(name),JSON.stringify(data)+"\n");
+      }
 
       return true;
 }
@@ -120,7 +125,6 @@ myDB.prototype.getDictionaryWordsDatasets = function(){
     var dic = this.wordsDic;
     var datasets = this.datasets;
     for(i in this.datasets){
-        caca=datasets[i];
         this.countNumberOfWords(datasets[i],function(data){
             dic[data.name]=data.result;
         });
@@ -178,8 +182,6 @@ myDB.prototype.countNumberOfWords = function(name,callback){
     var dic = {};
     var result;
     var wordsJSON="";
-
-
     readStream.pipe(split())
         .on('data', function(line){
             var data = JSON.parse(line);
@@ -238,6 +240,16 @@ myDB.prototype.streamPolarity = function(name,callback){
 
 }
 
+myDB.prototype.getLastTweets = function(name,callback) {
+    var tweets = [];
+    this.getLastObjects(name,5,function(data){
+        for (tweet in data.result) {
+            tweets.push(data.result[tweet].id);
+        }
+        callback({result:tweets});
+    });
+}
+
 
 myDB.prototype.getTweetsWithGeo = function(name,callback){
     var dic = {};
@@ -245,13 +257,17 @@ myDB.prototype.getTweetsWithGeo = function(name,callback){
     readStream.pipe(split())
         .on('data', function(line){
             var parsedData = JSON.parse(line);
-            dic[parsedData.id] = parsedData.coordinates;
+            if(parsedData.coordinates != null){
+                dic[parsedData.id] = [parsedData.coordinates.coordinates[1],parsedData.coordinates.coordinates[0]];
+            }
         })
         .on('end', function(){
             callback({result:dic});
         });
 
 }
+
+
 exports.myDB = myDB
 
 

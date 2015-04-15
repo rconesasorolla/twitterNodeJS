@@ -27,6 +27,7 @@ var DB=new myDB('./data');
 DB.getDictionaryWordsDatasets();
 DB.getStreamsCount();
 
+
 app.get('/',function(req,res){
     res.sendFile("public/myMashup.html",{root:application_root});
 });
@@ -81,12 +82,24 @@ app.post('/blog/:name',function(req,res){
 });
 
 app.post('/stream/',function(req,res){
-    var json = {"creator":"yo","about":query,"type":"","timestamp":""};
-    DB.createDataset(query,json);
+    var json = {"creator":"yo","about":req.body.name,"type":"","timestamp":""};
+    DB.createDataset(req.body.name,json);
 
-    DB.getDatasetInfo(query,function(data){
+    DB.getDatasetInfo(req.body.name,function(data){
     });
-    saveTweets(req.params.name);
+    saveTweets(req.body.name);
+    if(DB.datasets.indexOf(req.body.name)!=-1){
+        setTimeout(function() {
+            DB.getDictionaryWordsDatasets();
+            DB.getStreamsCount();
+        }, 5000);
+
+
+        res.send({result:'Success'});
+    }
+    else {
+        res.send({error: 'ERROR'});
+    }
 });
 
 
@@ -96,7 +109,8 @@ function saveTweets(query){
         var x;
         for(x in data){
             for(j in data[x]){
-                DB.insertObject(query,{'id': data[x][j].id, 'text' : data[x][j].text, 'coordinates' : data[x][j].coordinates});
+                var last = (j == data[x].length-1);
+                DB.insertObject(last,query,{'id': data[x][j].id, 'text' : data[x][j].text, 'coordinates' : data[x][j].coordinates});
             }
             break;
         }
@@ -115,6 +129,19 @@ app.get('/stream/:name/polarity/',function(req,res){
         res.send(data);
     });
 });
+
+app.get('/stream/:name/', function(req, res){
+    DB.getLastTweets(req.params.name, function(data){
+       res.send(data);
+    });
+});
+
+app.get('/stream/:name/geo/',function(req,res){
+    DB.getTweetsWithGeo(req.params.name,function(data){
+        res.send(data);
+    });
+});
+
 
 console.log("Web server running on port 8000 fuck yeah!");
 
