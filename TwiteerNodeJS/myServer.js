@@ -102,15 +102,28 @@ app.post('/stream/',function(req,res){
     }
 });
 
-
-
 function saveTweets(query){
     tweet.get('search/tweets.json',{q:query},function(error,data,status){
         var x;
         for(x in data){
             for(j in data[x]){
                 var last = (j == data[x].length-1);
-                DB.insertObject(last,query,{'id': data[x][j].id, 'text' : data[x][j].text, 'coordinates' : data[x][j].coordinates});
+                DB.insertObject(last,query,{'id': data[x][j].id_str, 'text' : data[x][j].text, 'coordinates' : data[x][j].coordinates});
+            }
+            break;
+        }
+    });
+
+}
+
+function updateTweets(query){
+    tweet.get('search/tweets.json',{q:query},function(error,data,status){
+        var x;
+        DB.insertLine(query);
+        for(x in data){
+            for(j in data[x]){
+                var last = (j == data[x].length-1);
+                DB.insertObject(last,query,{'id': data[x][j].id_str, 'text' : data[x][j].text, 'coordinates' : data[x][j].coordinates});
             }
             break;
         }
@@ -119,7 +132,7 @@ function saveTweets(query){
 }
 
 app.get('/stream/:name/words/',function(req,res){
-   DB.orderDictionary(req.params.name,20,function(data){
+   DB.orderDictionary(req.params.name,req.query.top,function(data){
        res.send(data);
    });
 });
@@ -131,9 +144,20 @@ app.get('/stream/:name/polarity/',function(req,res){
 });
 
 app.get('/stream/:name/', function(req, res){
-    DB.getLastTweets(req.params.name, function(data){
-       res.send(data);
+    DB.getLastTweets(req.params.name,req.query.limit, function(data){
+        res.send(data);
     });
+});
+
+app.put('/stream/:name',function(req,res){
+    updateTweets(req.params.name);
+    setTimeout(function() {
+        DB.getDictionaryWordsDatasets();
+        DB.getStreamsCount();
+    }, 5000);
+
+    res.send({result:'OK'});
+
 });
 
 app.get('/stream/:name/geo/',function(req,res){

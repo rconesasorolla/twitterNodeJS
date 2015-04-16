@@ -76,16 +76,23 @@ myDB.prototype.insertObject = function(last,name,data){
       if (this.datasets.indexOf(name) === -1 ){
         return false;
       }
+        data.timestamp = this.getTimeStamp();
+        if (last) {
+            fs.appendFile(this.filename(name), JSON.stringify(data));
 
-      data.timestamp=this.getTimeStamp();
-      if (last){
-          fs.appendFile(this.filename(name),JSON.stringify(data));
+        } else {
+            fs.appendFile(this.filename(name), JSON.stringify(data) + "\n");
+        }
 
-      } else{
-          fs.appendFile(this.filename(name),JSON.stringify(data)+"\n");
-      }
 
       return true;
+}
+
+myDB.prototype.insertLine = function(name){
+    if (this.datasets.indexOf(name) === -1 ){
+        return false;
+    }
+    fs.appendFile(this.filename(name), "\n");
 }
 
 myDB.prototype.getLastObjects= function(name,n,callback){
@@ -240,9 +247,9 @@ myDB.prototype.streamPolarity = function(name,callback){
 
 }
 
-myDB.prototype.getLastTweets = function(name,callback) {
+myDB.prototype.getLastTweets = function(name,count,callback) {
     var tweets = [];
-    this.getLastObjects(name,5,function(data){
+    this.getLastObjects(name,count,function(data){
         for (tweet in data.result) {
             tweets.push(data.result[tweet].id);
         }
