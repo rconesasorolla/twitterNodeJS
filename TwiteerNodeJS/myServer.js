@@ -26,6 +26,7 @@ var DB=new myDB('./data');
 
 DB.getDictionaryWordsDatasets();
 DB.getStreamsCount();
+DB.getHeaders();
 
 
 app.get('/',function(req,res){
@@ -44,25 +45,6 @@ app.get('/stream',function(req,res){
     res.send({result: DB.numberLinesDic});
 });
 
-app.get('/blog/delete/:name',function(req,res){
-    if (DB.deleteDataset(req.params.name)){
-        res.send({result:'OK'})
-    }
-    else{
-        res.send({error:'some DB error'});
-    }
-});
-
-app.post('/blog',function(req,res){
-    if (req.body !== null && req.body.title !== null){
-        if (DB.createDataset(req.body.title,req.body)){
-            res.send({result:'OK'});
-        }
-        else{ res.send({error:'this dataset already exists'}) }
-        
-    }
-    else { res.send({error:'missing title'}) }
-});
 
 app.get('/blog/:name',function(req,res){
     n = (req.query.n == null) ? 10 : parseInt(req.query.n);
@@ -82,16 +64,19 @@ app.post('/blog/:name',function(req,res){
 });
 
 app.post('/stream/',function(req,res){
-    var json = {"creator":"yo","about":req.body.name,"type":"","timestamp":""};
-    DB.createDataset(req.body.name,json);
+    console.log("Json: "+ req.body);
+    var json = {"@id":req.body.id,"@context":"http://schema.org/","@type":"SearchAction",
+        "agent":{"@type":"Person","name":req.body.agent},
+        "query":req.body.data,"sameAs":req.body.sameAs,"location":req.body.location,"url":"localhost:8000/"+req.body.id};
+    DB.createDataset(req.body.id,json);
 
-    DB.getDatasetInfo(req.body.name,function(data){
-    });
-    saveTweets(req.body.name);
-    if(DB.datasets.indexOf(req.body.name)!=-1){
+   // DB.getDatasetInfo(req.body.id,function(data){});
+    saveTweets(req.body.data);
+    if(DB.datasets.indexOf(req.body.data)!=-1){
         setTimeout(function() {
             DB.getDictionaryWordsDatasets();
             DB.getStreamsCount();
+            DB.getHeaders();
         }, 5000);
 
 
@@ -154,6 +139,7 @@ app.put('/stream/:name',function(req,res){
     setTimeout(function() {
         DB.getDictionaryWordsDatasets();
         DB.getStreamsCount();
+        DB.getHeaders();
     }, 5000);
 
     res.send({result:'OK'});
@@ -164,6 +150,11 @@ app.get('/stream/:name/geo/',function(req,res){
     DB.getTweetsWithGeo(req.params.name,function(data){
         res.send(data);
     });
+});
+
+app.get('/stream/graph/',function(req,res){
+    console.log(DB.headers);
+    res.send({result:DB.headers});
 });
 
 

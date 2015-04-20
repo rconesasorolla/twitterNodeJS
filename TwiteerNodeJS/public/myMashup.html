@@ -95,6 +95,7 @@ div#fotos{
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 <script src="http://timdream.org/wordcloud2.js/src/wordcloud2.js"></script>
 <script src="http://maps.googleapis.com/maps/api/js?key=AIzaSyD6hLLddlXLuJE52eCmsFbA8OGZ0eh_UO4&sensor=false"></script>
+<script src="/jsonldGen.js"></script>
 
 <script>
 	$(document).ready(function(){
@@ -121,7 +122,6 @@ div#fotos{
 			//hide the form
 			$("#form-container").css({"visibility":"hidden"});
 			newdata=$("#name").val();
-			addPost(newdata);
 	   });
 
 		$(".tweet").click(function(){
@@ -227,31 +227,15 @@ div#fotos{
 			update_map(json);
 
 		});	  
+
+		var graphData;
+		var graph = "http://localhost:8000/stream/graph";
+		$.getJSON(graph, {
+		}).success(function(data){
+			graphData = data.result;
+		});
 			  
 	};
-
-function addPost(name){
-    if (name!="none"){
-            //send post data to back-end
-            postdata={name:name,query:name};
-            $.ajax({
-            	type: "POST",
-                url: "/stream/",
-                data: JSON.stringify(postdata),
-                success: function(data){
-    					if (data.error!=null) {
-                    	alert("Error:"+data.error);
-                    }                    
-                },
-                contentType:'application/json' 
-                
-            })
-            setTimeout(function() {
-				updateButtons(name);   
-			},  6000);             	  
-
-        }
-    }
 
 
 	function update_polar(data){
@@ -338,15 +322,11 @@ function addPost(name){
 
 </script>
 
-<body>
+<body onload="addFields()">
 
 <h1>My Mash-up</h1>
 <!--Hidden form for creating new buttons -->
-<div id="form-container">
-	<label for="name" width="20%">Nuevo stream:</label>
-	<input id="name" width="70%" type="text" placeholder="..nombre de stream"/>
-	<button id="create" width="10%">Create</button>
-</div>
+
 
 <table cols="4">
 <tr>
@@ -375,6 +355,18 @@ function addPost(name){
 	</td>
 </tr>
 </table>
-
+<div id="form-container">
+	<div class="container"><br>
+		<input id="query" placeholder="..tu consulta aquí">
+		    <button onclick="getBabelNetData()">Go</button>
+		<div id="labelarea">
+		</div>
+		<div id="fieldsarea">
+		</div>
+		<button id="create" onclick="getObject()">Generate JSON-LD</button><br>
+		<textarea id="jsonld" cols="50" rows="10" placeholder="..put here a JSON-LD example to extract fields..">
+		</textarea>
+	</div>
+</div>
 </body>
 </html>

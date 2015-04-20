@@ -11,6 +11,7 @@ myDB = function(dataDir){
         this.polarityDic = {};
         this.numberLinesDic = {};
         this.wordsDic = {};
+        this.headers = [];
 }
 
 myDB.prototype.inspectDatasets = function(){
@@ -40,7 +41,6 @@ myDB.prototype.getNumberOfLines = function(name,callback){
 }
 
 
-
 myDB.prototype.getStreamsCount= function() {
     var streams = this.getDatasets();
     var dic = this.numberLinesDic;
@@ -64,8 +64,7 @@ myDB.prototype.getTimeStamp = function(){
 myDB.prototype.createDataset = function(name,data){
      if (this.datasets.indexOf(name) === -1){
          this.datasets.push(name);
-         data.type="metadata";
-         data.timestamp=this.getTimeStamp();
+         data.endTime=this.getTimeStamp();
          fs.appendFile(this.filename(name),JSON.stringify(data)+"\n");
          return true;
       }
@@ -102,7 +101,7 @@ myDB.prototype.getLastObjects= function(name,n,callback){
         xs.slice(-n)
         .on('data',function(chunk){
             object=JSON.parse(chunk.toString().trim());
-            if (!(object.type !== null && object.type === "metadata")){
+            if (!(object.type !== null && object.type === "SearchAction")){
                 lista.push(JSON.parse(chunk.toString().trim()))
             } 
         })
@@ -148,17 +147,6 @@ myDB.prototype.deleteDataset= function(name){
 
 }
 
-myDB.prototype.getDatasetInfo = function(name,callback){
-    var data = "";
-    var index = this.datasets.indexOf(name);
-    if(index != 1) {
-        xs = sf(this.filename(name));
-        xs.slice(0,1)
-            .on('data', function (chunk) {
-                callback({result:JSON.parse(chunk.toString().trim())});
-            });
-    }
-}
 
 myDB.prototype.searchDataset = function(keyword){
     result =[];
@@ -170,19 +158,6 @@ myDB.prototype.searchDataset = function(keyword){
     return "result:"+result;
 }
 
-/*myDB.prototype.countWords = function(name, callback){
-    var readStream = fs.createReadStream("./data/"+name+".json");
-    var words = "";
-    readStream.pipe(split())
-        .on('data', function(line){
-            var data = JSON.parse(line);
-            words += data.body + " ";
-        })
-    .on('end', function(){
-       count = words.split(" ").length-2;
-       callback({result: count});
-    });
-}*/
 
 myDB.prototype.countNumberOfWords = function(name,callback){
     var readStream = fs.createReadStream("./data/"+name+".json");
@@ -272,6 +247,28 @@ myDB.prototype.getTweetsWithGeo = function(name,callback){
             callback({result:dic});
         });
 
+}
+
+myDB.prototype.getDatasetInfo = function(name,callback){
+    var data = "";
+    var index = this.datasets.indexOf(name);
+    if(index != -1) {
+        xs = sf(this.filename(name));
+        xs.slice(0,1)
+            .on('data', function (chunk) {
+                callback({result:JSON.parse(chunk.toString().trim())});
+            });
+    }
+}
+
+myDB.prototype.getHeaders = function(){
+    var head = this.headers;
+    var datasets = this.datasets;
+    for(i in datasets){
+        this.getDatasetInfo(datasets[i],function(data){
+            head.push(data.result);
+        });
+    }
 }
 
 
