@@ -111,6 +111,19 @@ div#fotos{
 					
 				});
 		});
+		$.ajax({
+            url: "http://localhost:28017/twitter/jsonld/",
+            type: "GET",
+            dataType: 'jsonp',
+      		jsonp: 'jsonp',
+            crossDomain: true,
+            success: function (response) {
+        		var json = JSON.stringify(response.rows);
+        		var jsonls = {"@context":"http://schema.org","@graph":json}
+        		$("#ldjson").text(JSON.stringify(jsonls));
+            }
+        });
+	
 	   //event for button stream class
 	   
 		$("#NEW").click(function(){
@@ -326,6 +339,7 @@ div#fotos{
 
 <h1>My Mash-up</h1>
 <!--Hidden form for creating new buttons -->
+<script type="ld+json" id ="ldjson"></script>
 
 
 <table cols="4">

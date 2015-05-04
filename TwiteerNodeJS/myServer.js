@@ -15,6 +15,9 @@ var tweet = new twitter({
 });
 
 
+var MongoClient = require('mongodb');
+var assert=require("assert");
+
 app.use(express.static(path.join(application_root,"public")));
 
 var bodyparser=require("body-parser");
@@ -72,13 +75,24 @@ app.post('/stream/',function(req,res){
 
    // DB.getDatasetInfo(req.body.id,function(data){});
     saveTweets(req.body.data);
+
+    MongoClient.connect("mongodb://localhost:27017/twitter", {native_parser:true},
+        function(err, db) {
+            assert.equal(null, err);
+            db.collection('jsonld').insertOne(json,
+                function(err, result) {
+                    assert.equal(null, err);
+                    console.log(result.insertedId);
+                    db.close();
+                });
+        });
+
     if(DB.datasets.indexOf(req.body.data)!=-1){
         setTimeout(function() {
             DB.getDictionaryWordsDatasets();
             DB.getStreamsCount();
             DB.getHeaders();
         }, 5000);
-
 
         res.send({result:'Success'});
     }
